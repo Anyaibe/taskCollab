@@ -8,7 +8,7 @@ SECRET_KEY = config("SK")
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['taskCollab.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
