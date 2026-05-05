@@ -1,0 +1,202 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search — TaskCollab</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR (same as dashboard) -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+        </svg>
+      </div>
+      <div class="sb-name">TaskCollab <span>Collaboration System</span></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-label">Main</div>
+      <a href="{% url 'dashboard' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="{% url 'project_list' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+        </svg>
+        Projects
+      </a>
+      <div class="sb-label">Account</div>
+      <a href="{% url 'profile' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        Profile
+      </a>
+      <a href="{% url 'logout' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Logout
+      </a>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-user">
+        <div class="avatar av-lg">{{ request.user.username|first|upper }}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.82rem;font-weight:600;color:#fff;">{{ request.user.username }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="search-wrap" style="max-width:500px;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+        </svg>
+        <form method="GET" action="{% url 'search' %}" style="flex:1;">
+          <input type="text" name="q" class="search-inp" value="{{ query }}"
+                 placeholder="Search tasks, projects..." autofocus>
+        </form>
+      </div>
+      <div class="topbar-right">
+        <button class="user-btn">
+          <div class="avatar" style="width:30px;height:30px;font-size:.75rem;">{{ request.user.username|first|upper }}</div>
+          <span style="font-size:.85rem;font-weight:600;color:var(--text);">{{ request.user.username }}</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+
+      <div class="page-hd">
+        <h1 class="page-title">
+          Search Results
+          {% if query %}<span style="color:var(--muted);font-weight:400;font-size:1rem;"> for "{{ query }}"</span>{% endif %}
+        </h1>
+        {% if query %}
+        <p class="page-sub">
+          Found {{ tasks.count }} task{{ tasks.count|pluralize }} and
+          {{ projects.count }} project{{ projects.count|pluralize }}.
+        </p>
+        {% endif %}
+      </div>
+
+      {% if not query %}
+      <div class="card">
+        <div class="empty" style="padding:60px 24px;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+          </svg>
+          <p>Type something in the search bar above to find tasks and projects.</p>
+        </div>
+      </div>
+
+      {% else %}
+
+      <!-- TASKS RESULTS -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-hd">
+          <span class="card-title">
+            Tasks
+            <span style="font-size:.82rem;color:var(--muted);font-weight:400;margin-left:6px;">({{ tasks.count }} found)</span>
+          </span>
+        </div>
+        {% if tasks %}
+        <table class="task-table">
+          <thead>
+            <tr><th>#</th><th>Task</th><th>Project</th><th>Priority</th><th>Status</th><th>Due Date</th></tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+            <tr>
+              <td style="color:var(--light);font-family:var(--mono);font-size:.78rem;">{{ forloop.counter }}</td>
+              <td>
+                <a href="{% url 'task_detail' task.pk %}" style="color:var(--text);font-weight:500;">
+                  {{ task.title }}
+                </a>
+                {% if task.description %}
+                  <p style="font-size:.78rem;color:var(--muted);margin-top:2px;">{{ task.description|truncatechars:60 }}</p>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'project_detail' task.project.pk %}" style="font-size:.82rem;color:var(--accent);">
+                  {{ task.project.name }}
+                </a>
+              </td>
+              <td>
+                {% if task.priority == 'high' %}<span class="priority-badge p-high">HIGH</span>
+                {% elif task.priority == 'medium' %}<span class="priority-badge p-med">MED</span>
+                {% else %}<span class="priority-badge p-low">LOW</span>{% endif %}
+              </td>
+              <td>
+                {% if task.status == 'pending' %}<span class="badge b-pending">Pending</span>
+                {% elif task.status == 'in_progress' %}<span class="badge b-progress">In Progress</span>
+                {% else %}<span class="badge b-done">Completed</span>{% endif %}
+              </td>
+              <td style="font-size:.82rem;color:var(--muted);">{{ task.due_date|date:"M d, Y"|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty" style="padding:32px;">
+          <p>No tasks match "{{ query }}".</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- PROJECTS RESULTS -->
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">
+            Projects
+            <span style="font-size:.82rem;color:var(--muted);font-weight:400;margin-left:6px;">({{ projects.count }} found)</span>
+          </span>
+        </div>
+        {% if projects %}
+        <div style="display:flex;flex-direction:column;">
+          {% for project in projects %}
+          <a href="{% url 'project_detail' project.pk %}"
+             style="display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border);text-decoration:none;transition:background .15s;"
+             onmouseover="this.style.background='var(--bg)'"
+             onmouseout="this.style.background='transparent'">
+            <div style="width:40px;height:40px;background:var(--accent-l);color:var(--accent);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0;">
+              {{ project.name|first|upper }}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;color:var(--text);">{{ project.name }}</div>
+              {% if project.description %}
+                <div style="font-size:.82rem;color:var(--muted);margin-top:2px;">{{ project.description|truncatechars:80 }}</div>
+              {% endif %}
+            </div>
+            <div style="font-size:.78rem;color:var(--muted);">{{ project.tasks.count }} task{{ project.tasks.count|pluralize }}</div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty" style="padding:32px;">
+          <p>No projects match "{{ query }}".</p>
+        </div>
+        {% endif %}
+      </div>
+
+      {% endif %}
+
+    </main>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects — TaskCollab</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  {% include 'tasks/sidebar.html' %}
+
+  <div class="main">
+    {% include 'tasks/topbar.html' %}
+    <main class="page">
+
+      <div class="page-hd">
+        <h1 class="page-title">Projects</h1>
+        <p class="page-sub">All projects you have created.</p>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-success" style="margin-bottom:20px;">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <div style="margin-bottom:20px;">
+        <a href="{% url 'project_create' %}" class="add-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Project
+        </a>
+      </div>
+
+      {% if projects %}
+      <div class="projects-grid">
+        {% for project in projects %}
+        <div class="project-card">
+          <div class="project-card-top">
+            <div class="project-icon">
+              {{ project.name|first|upper }}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div class="project-name">{{ project.name }}</div>
+              <div class="project-meta">Created {{ project.created_at|date:"M d, Y" }}</div>
+            </div>
+          </div>
+          {% if project.description %}
+          <p class="project-desc">{{ project.description|truncatechars:80 }}</p>
+          {% endif %}
+          <div class="project-stats">
+            <span>{{ project.tasks.count }} task{{ project.tasks.count|pluralize }}</span>
+            <span>{{ project.tasks.filter.count }}</span>
+          </div>
+          <div class="project-actions">
+            <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline btn-sm">View</a>
+            <a href="{% url 'task_create' %}?project={{ project.pk }}" class="btn btn-primary btn-sm">Add Task</a>
+            <a href="{% url 'project_delete' project.pk %}" class="act-btn" title="Delete" style="margin-left:auto;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty" style="background:white;border-radius:10px;border:1px solid var(--border);">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        <p>No projects yet. <a href="{% url 'project_create' %}">Create your first project</a></p>
+      </div>
+      {% endif %}
+
+    </main>
+  </div>
+</div>
+<script>
+  // Auto-dismiss messages after 4 seconds
+  setTimeout(function() {
+    document.querySelectorAll('.alert').forEach(function(el) {
+      el.style.transition = 'opacity 0.6s ease';
+      el.style.opacity = '0';
+      setTimeout(function() { el.remove(); }, 600);
+    });
+  }, 4000);
+</script>
+</body>
+</html>

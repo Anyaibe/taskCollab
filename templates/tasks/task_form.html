@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} — TaskCollab</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app">
+  {% include 'tasks/sidebar.html' %}
+  <div class="main">
+    {% include 'tasks/topbar.html' %}
+    <main class="page">
+
+      <div class="page-hd">
+        <h1 class="page-title">{{ title }}</h1>
+        <p class="page-sub">Fill in the details below.</p>
+      </div>
+
+      <div class="form-card">
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label>Task Title *</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+              <div class="field-error">{{ form.title.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            {{ form.description }}
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Project *</label>
+              {{ form.project }}
+              {% if form.project.errors %}
+                <div class="field-error">{{ form.project.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="form-group">
+              <label>Priority</label>
+              {{ form.priority }}
+            </div>
+          </div>
+          
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Status</label>
+              {{ form.status }}
+            </div>
+            <div class="form-group">
+              <label>Due Date</label>
+              {{ form.due_date }}
+            </div>
+          </div>
+
+
+          <!-- Assign To — multiple checkboxes -->
+          <div class="form-group">
+            <label>Assign To (select one or more team members)</label>
+            <div class="checkbox-list">
+              {% for checkbox in form.assigned_to %}
+              <label class="checkbox-item">
+                {{ checkbox.tag }}
+                <span>{{ checkbox.choice_label }}</span>
+              </label>
+              {% endfor %}
+            </div>
+            {% if form.assigned_to.errors %}
+              <div class="field-error">{{ form.assigned_to.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label>Due Date</label>
+            {{ form.due_date }}
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <button type="submit" class="btn btn-primary">Save Task</button>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script>
+  setTimeout(function() {
+    document.querySelectorAll('.alert').forEach(function(el) {
+      el.style.transition = 'opacity 0.6s ease';
+      el.style.opacity = '0';
+      setTimeout(function() { el.remove(); }, 600);
+    });
+  }, 4000);
+</script>
+</body>
+</html>

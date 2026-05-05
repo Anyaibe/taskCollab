@@ -1,0 +1,18 @@
+<header class="topbar">
+  <div class="search-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input type="text" class="search-inp" placeholder="Search tasks, projects...">
+  </div>
+  <div class="topbar-right">
+    <a href="{% url 'task_create' %}" class="add-btn" style="margin-right:8px;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Task
+    </a>
+    <button class="user-btn">
+      <div class="avatar" style="width:30px;height:30px;font-size:.75rem;">{{ request.user.username|first|upper }}</div>
+      <span style="font-size:.85rem;font-weight:600;color:var(--text);">{{ request.user.username }}</span>
+    </button>
+  </div>
+</header>

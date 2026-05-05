@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} — TaskCollab</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app">
+  {% include 'tasks/sidebar.html' %}
+  <div class="main">
+    {% include 'tasks/topbar.html' %}
+    <main class="page">
+
+      <div class="page-hd">
+        <h1 class="page-title">{{ title }}</h1>
+        <p class="page-sub">Fill in the details below.</p>
+      </div>
+
+      <div class="form-card">
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label>Project Name *</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="field-error">{{ form.name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+              <div class="field-error">{{ form.description.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <button type="submit" class="btn btn-primary">Save Project</button>
+            <a href="{% url 'project_list' %}" class="btn btn-outline">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+    </main>
+  </div>
+</div>
+</body>
+</html>

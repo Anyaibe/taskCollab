@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — TaskCollab</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+        </svg>
+      </div>
+      <div class="sb-name">TaskCollab <span>Collaboration System</span></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-label">Main</div>
+      <a href="{% url 'dashboard' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="{% url 'project_list' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+        </svg>
+        Projects
+      </a>
+      <div class="sb-label">Account</div>
+      <a href="{% url 'profile' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        Profile
+      </a>
+      <a href="{% url 'logout' %}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Logout
+      </a>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-user">
+        <div class="avatar av-lg">{{ request.user.username|first|upper }}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.82rem;font-weight:600;color:#fff;">{{ request.user.username }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="search-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+        </svg>
+        <form method="GET" action="{% url 'search' %}" style="flex:1;">
+          <input type="text" name="q" class="search-inp" placeholder="Search tasks, projects...">
+        </form>
+      </div>
+      <div class="topbar-right">
+        <button class="user-btn">
+          <div class="avatar" style="width:30px;height:30px;font-size:.75rem;">{{ request.user.username|first|upper }}</div>
+          <span style="font-size:.85rem;font-weight:600;color:var(--text);">{{ request.user.username }}</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+      <div style="margin-bottom:16px;">
+        <a href="{% url 'dashboard' %}"
+           style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);text-decoration:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Back to Dashboard
+        </a>
+      </div>
+
+      <div class="page-hd">
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-sub">All notifications are marked as read when you open this page.</p>
+      </div>
+
+      <div class="card" style="max-width:680px;">
+        {% for notif in notifications %}
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:16px 22px;border-bottom:1px solid var(--border);transition:background .15s;"
+             onmouseover="this.style.background='var(--bg)'"
+             onmouseout="this.style.background='transparent'">
+          <!-- Bell icon -->
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--accent);">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:.88rem;color:var(--text);line-height:1.5;">
+              {{ notif.message }}
+            </div>
+            <div style="font-size:.75rem;color:var(--light);margin-top:3px;font-family:var(--mono);">
+              {{ notif.created_at|timesince }} ago
+            </div>
+            {% if notif.link %}
+            <a href="{{ notif.link }}" style="font-size:.78rem;color:var(--accent);margin-top:4px;display:inline-block;">
+              View task →
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty" style="padding:60px 24px;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <p>No notifications yet. You will be notified when tasks are assigned to you.</p>
+        </div>
+        {% endfor %}
+      </div>
+
+    </main>
+  </div>
+</div>
+</body>
+</html>

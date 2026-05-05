@@ -1,0 +1,237 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ task.title }} — TaskCollab</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app">
+  {% include 'tasks/sidebar.html' %}
+  <div class="main">
+    {% include 'tasks/topbar.html' %}
+    <main class="page">
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-success" style="margin-bottom:20px;">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Back Navigation -->
+      <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+        <a href="{% url 'dashboard' %}"
+           style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);text-decoration:none;"
+           onmouseover="this.style.color='var(--accent)'"
+           onmouseout="this.style.color='var(--muted)'">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Dashboard
+        </a>
+        <span style="color:var(--border);">|</span>
+        <a href="{% url 'project_detail' task.project.pk %}"
+           style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);text-decoration:none;"
+           onmouseover="this.style.color='var(--accent)'"
+           onmouseout="this.style.color='var(--muted)'">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          {{ task.project.name }}
+        </a>
+      </div>
+      
+      <!-- Task Header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+        <div>
+          <h1 class="page-title" style="margin-top:6px;">{{ task.title }}</h1>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px;">
+          
+            <!-- Status badge -->
+            {% if task.status == 'pending' %}
+              <span class="badge b-pending">Pending</span>
+            {% elif task.status == 'in_progress' %}
+              <span class="badge b-progress">In Progress</span>
+            {% else %}
+              <span class="badge b-done">Completed</span>
+            {% endif %}
+          
+            <!-- Assigned to — ManyToMany, show all users -->
+            <span style="font-size:.82rem;color:var(--muted);">
+              Assigned to:
+              {% for u in task.assigned_to.all %}
+                <strong>{{ u.username }}</strong>{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                <strong>Unassigned</strong>
+              {% endfor %}
+            </span>
+          
+            <!-- Due date -->
+            {% if task.due_date %}
+            <span class="due">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Due {{ task.due_date|date:"M d, Y" }}
+            </span>
+            {% endif %}
+          
+          </div>
+        </div>
+      
+        <!-- Action buttons — project leader only -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          {% if request.user == task.project.created_by %}
+            <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline btn-sm">Edit Task</a>
+            <form method="POST" action="{% url 'task_update_status' task.pk %}" style="display:inline;">
+              {% csrf_token %}
+              {% if task.status == 'pending' %}
+                <input type="hidden" name="status" value="in_progress">
+                <button type="submit" class="btn btn-primary btn-sm">▶ Start Task</button>
+              {% elif task.status == 'in_progress' %}
+                <input type="hidden" name="status" value="completed">
+                <button type="submit" class="btn btn-primary btn-sm" style="background:var(--green);">✓ Mark Complete</button>
+              {% endif %}
+            </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;">
+
+        <!-- LEFT: Description + Comments -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Description -->
+          {% if task.description %}
+          <div class="card">
+            <div class="card-hd"><span class="card-title">Description</span></div>
+            <div style="padding:18px 22px;">
+              <p style="font-size:.9rem;color:var(--text);line-height:1.7;">{{ task.description }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Comments -->
+          <div class="card">
+            <div class="card-hd">
+              <span class="card-title">Comments</span>
+              <span style="font-size:.8rem;color:var(--muted);">{{ comments.count }} comment{{ comments.count|pluralize }}</span>
+            </div>
+
+            {% for comment in comments %}
+            <div class="cmt">
+              <div class="avatar av-md {% cycle '' 'av-2' 'av-3' 'av-4' %}">
+                {{ comment.author.username|first|upper }}
+              </div>
+              <div class="cmt-body">
+                <div class="cmt-hd">
+                  <span class="cmt-author">{{ comment.author.username }}</span>
+                  {% with role=comment.author.memberships.first %}
+                    {% if role %}
+                      <span style="font-size:.72rem;background:var(--accent-l);color:var(--accent);padding:2px 7px;border-radius:10px;font-weight:600;">
+                        {{ role.get_role_display }}
+                      </span>
+                    {% endif %}
+                  {% endwith %}
+                  <span class="cmt-time">{{ comment.created_at|timesince }} ago</span>
+                </div>
+                <p style="font-size:.88rem;color:var(--text);margin-top:4px;line-height:1.6;">{{ comment.body }}</p>
+              </div>
+            </div>
+            {% empty %}
+            <div style="padding:24px 22px;text-align:center;color:var(--light);font-size:.88rem;">
+              No comments yet. Be the first to comment below.
+            </div>
+            {% endfor %}
+
+            <!-- Post comment form -->
+            <div style="padding:16px 22px;border-top:1px solid var(--border);">
+              <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                  <label style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">
+                    Add a Comment
+                  </label>
+                  <textarea
+                    name="body"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Write your comment, question, or update here..."
+                    required
+                  ></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Task Details -->
+        <div>
+          <div class="card">
+            <div class="card-hd"><span class="card-title">Task Details</span></div>
+            <div style="padding:0;">
+              <div class="item-row">
+                <div style="flex:1;">
+                  <div class="item-meta">Project</div>
+                  <div class="item-title">
+                    <a href="{% url 'project_detail' task.project.pk %}">{{ task.project.name }}</a>
+                  </div>
+                </div>
+              </div>
+              <div class="item-row">
+                <div style="flex:1;">
+                  <div class="item-meta">Assigned To</div>
+                  <div class="item-title">{{ task.assigned_to.username }}</div>
+                </div>
+              </div>
+              <div class="item-row">
+                <div style="flex:1;">
+                  <div class="item-meta">Created By</div>
+                  <div class="item-title">{{ task.created_by.username|default:"—" }}</div>
+                </div>
+              </div>
+              <div class="item-row">
+                <div style="flex:1;">
+                  <div class="item-meta">Status</div>
+                  <div class="item-title">{{ task.get_status_display }}</div>
+                </div>
+              </div>
+              <div class="item-row">
+                <div style="flex:1;">
+                  <div class="item-meta">Due Date</div>
+                  <div class="item-title">{{ task.due_date|date:"M d, Y"|default:"Not set" }}</div>
+                </div>
+              </div>
+              <div class="item-row">
+                <div style="flex:1;">
+                  <div class="item-meta">Created</div>
+                  <div class="item-title">{{ task.created_at|date:"M d, Y" }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+  setTimeout(function() {
+    document.querySelectorAll('.alert').forEach(function(el) {
+      el.style.transition = 'opacity 0.6s ease';
+      el.style.opacity = '0';
+      setTimeout(function() { el.remove(); }, 600);
+    });
+  }, 4000);
+</script>
+</body>
+</html>

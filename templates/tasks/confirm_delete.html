@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm Delete — TaskCollab</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="app">
+  {% include 'tasks/sidebar.html' %}
+  <div class="main">
+    {% include 'tasks/topbar.html' %}
+    <main class="page">
+      <div class="form-card" style="max-width:480px;">
+        <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:12px;color:var(--red);">
+          Delete {{ type }}
+        </h2>
+        <p style="color:var(--muted);margin-bottom:24px;">
+          Are you sure you want to delete <strong>"{{ object }}"</strong>?
+          This action cannot be undone.
+        </p>
+        <form method="POST">
+          {% csrf_token %}
+          <div style="display:flex;gap:12px;">
+            <button type="submit" class="btn btn-primary" style="background:var(--red);">
+              Yes, Delete
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+</body>
+</html>
