@@ -185,22 +185,37 @@ def dashboard_view(request):
     # Projects belonging to this user
     projects = Project.objects.filter(created_by=user)
 
-    # Team members — built as dictionaries with correct role
-    raw_members = User.objects.filter(
+    # ── Team Members — only show users connected via accepted membership ──────────
+    #
+    # Logic:
+    # 1. Get all projects the current user is involved in (created or member of)
+    # 2. Find all ProjectMembership records for those projects
+    # 3. Collect the unique users from those memberships
+    # 4. Exclude the current user, admins, and users with no membership connection
+    # All project IDs this user is involved with
+    involved_project_ids = set(
+        list(projects.values_list('pk', flat=True)) +
+        list(ProjectMembership.objects.filter(user=user).values_list('project_id', flat=True))
+    )
+    # All users who have an accepted membership on any of those projects
+    # excluding the current user and superusers
+    team_member_users = User.objects.filter(
+        memberships__project_id__in=involved_project_ids,
         is_active=True,
         is_superuser=False
-    ).exclude(pk=user.pk)[:6]
-
+    ).exclude(pk=user.pk).distinct()[:6]
+    # Build the team_members list with role information
     team_members = []
-    for member in raw_members:
-        # A user is a leader if they created any project
+    for member in team_member_users:
         is_leader = Project.objects.filter(created_by=member).exists()
         if is_leader:
             role_display = '👑 Project Leader'
         else:
-            membership = ProjectMembership.objects.filter(user=member).first()
+            membership = ProjectMembership.objects.filter(
+                user=member,
+                project_id__in=involved_project_ids
+            ).first()
             role_display = membership.get_role_display() if membership else 'Team Member'
-
         team_members.append({
             'username':  member.username,
             'full_name': member.get_full_name() or member.username,
@@ -217,7 +232,7 @@ def dashboard_view(request):
     else:
         my_membership = ProjectMembership.objects.filter(user=user).first()
         current_user_role = my_membership.get_role_display() if my_membership else 'Team Member'
-    
+
     # Activity logs for projects the user owns or is part of
     user_project_ids = list(projects.values_list('pk', flat=True))
     member_project_ids = list(
