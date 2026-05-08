@@ -622,7 +622,6 @@ def notifications_view(request):
 
 @login_required(login_url='login')
 def invite_member(request, pk):
-    """Project leader searches for a user and sends an email invitation."""
     project = get_object_or_404(Project, pk=pk, created_by=request.user)
 
     if request.method == 'POST':
@@ -633,7 +632,6 @@ def invite_member(request, pk):
             messages.error(request, 'Please enter a username or email to search.')
             return redirect('project_detail', pk=pk)
 
-        # Search by username OR email
         found_user = User.objects.filter(
             Q(username__iexact=query) | Q(email__iexact=query),
             is_active=True,
@@ -648,53 +646,55 @@ def invite_member(request, pk):
             messages.error(request, 'You cannot invite yourself.')
             return redirect('project_detail', pk=pk)
 
-        # Check if already a member
         if ProjectMembership.objects.filter(project=project, user=found_user).exists():
-            messages.error(request, f'{found_user.username} is already a member of this project.')
+            messages.error(request, f'{found_user.username} is already a member.')
             return redirect('project_detail', pk=pk)
 
-        # Check if invitation already sent
         existing = ProjectInvitation.objects.filter(
             project=project, email=found_user.email
         ).first()
 
         if existing and existing.status == 'pending':
-            messages.error(request, f'An invitation has already been sent to {found_user.email}.')
+            messages.error(request, f'Invitation already sent to {found_user.email}.')
             return redirect('project_detail', pk=pk)
 
-        # Create invitation
+        # Create invitation record
         invitation = ProjectInvitation.objects.create(
             project=project,
             invited_by=request.user,
             email=found_user.email,
         )
 
-        # Build the accept URL
-        accept_url = f"{request.scheme}://{request.get_host()}/invitations/{invitation.token}/accept/"
+        accept_url  = f"{request.scheme}://{request.get_host()}/invitations/{invitation.token}/accept/"
         decline_url = f"{request.scheme}://{request.get_host()}/invitations/{invitation.token}/decline/"
 
-        # Send invitation email
-        send_mail(
-            subject=f'You are invited to join "{project.name}" on TaskCollab',
-            message=f"""
-Hi {found_user.username},
+        # Send email — catch errors so page doesn't crash
+        try:
+            send_mail(
+                subject=f'Invitation to join "{project.name}" on TaskCollab',
+                message=f"""Hi {found_user.username},
 
 {request.user.username} has invited you to join the project "{project.name}" on TaskCollab.
 
-Click the link below to accept the invitation:
+Accept invitation:
 {accept_url}
 
-To decline:
+Decline invitation:
 {decline_url}
 
-This invitation is from the Project Task and Team Collaboration System.
-            """,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[found_user.email],
-            fail_silently=False,
-        )
+This invitation will remain open until you respond.
 
-        messages.success(request, f'Invitation sent to {found_user.email}.')
+— The TaskCollab Team""",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[found_user.email],
+                fail_silently=False,
+            )
+            messages.success(request, f'Invitation sent to {found_user.email}.')
+        except Exception as e:
+            # Delete the invitation if email failed
+            invitation.delete()
+            messages.error(request, f'Failed to send invitation email. Please check your email settings. Error: {str(e)}')
+            return redirect('project_detail', pk=pk)
 
         ActivityLog.objects.create(
             user=request.user,
