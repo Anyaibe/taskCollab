@@ -34,7 +34,6 @@ class ProjectMembershipAdmin(admin.ModelAdmin):
     list_filter   = ('role', 'project')
     list_editable = ('role',)
 
-from .models import Project, Task, Comment, ProjectMembership, ActivityLog
 
 @admin.register(ActivityLog)
 class ActivityLogAdmin(admin.ModelAdmin):
